@@ -11,10 +11,10 @@
 #define LIBRTCM3_RTCM3_H
 
 /* Macros for RTCM message processing */
-#define	READ_RESERVED   1
-#define READ_LENGTH	    2
-#define	READ_MESSAGE    3
-#define	READ_CHECKSUM   4
+#define READ_RESERVED   1
+#define READ_LENGTH     2
+#define READ_MESSAGE    3
+#define READ_CHECKSUM   4
 
 #define RTCM3_PREAMBLE 0xD3
 #define RTCM3_MSG_1005 0x69
@@ -24,11 +24,11 @@
 /* Macros for UBX message processing */
 
 #define UNINIT          0
-#define	GOT_SYNC1       1
-#define	GOT_SYNC2       2
-#define	GOT_CLASS       3
+#define GOT_SYNC1       1
+#define GOT_SYNC2       2
+#define GOT_CLASS       3
 #define GOT_ID          4
-#define	GOT_LEN1        5
+#define GOT_LEN1        5
 #define GOT_LEN2        6
 #define GOT_PAYLOAD     7
 #define GOT_CHECKSUM1   8
@@ -90,7 +90,7 @@
 
 /** RTCM3 callback function prototype definition. */
 
-typedef void (*rtcm3_msg_callback_t)( u8 len, u8 msg[]);
+typedef void (*rtcm3_msg_callback_t)(u8 len, u8 msg[]);
 
 /** RTCM3 callback node.
  * Forms a linked list of callbacks.
@@ -105,34 +105,35 @@ typedef struct rtcm3_msg_callbacks_node {
 
 /* structure for processing RTCM and UBX messages */
 typedef struct {
-	// For RTCM processing
-	u8 state;
-	u16 msg_type;
-	u8 msg_class;
-	u16 crc;
-	u16 msg_len;
-	u8 n_read;
-	u8 msg_buff[1024+6+1];
-	rtcm3_msg_callbacks_node_t* rtcm3_msg_callbacks_head;
-	u8 status;
-	u8 ck_a, ck_b;
-	u8 error_cnt;
-	u8 error_last;
+  // For RTCM processing
+  u8 state;
+  u16 msg_type;
+  u8 msg_class;
+  u16 crc;
+  u16 msg_len;
+  u8 n_read;
+  u8 msg_buff[1024 + 6 + 1];
+  rtcm3_msg_callbacks_node_t *rtcm3_msg_callbacks_head;
+  u8 status;
+  u8 ck_a, ck_b;
+  u8 error_cnt;
+  u8 error_last;
 } msg_state_t;
 
 
 /* Function prototypes */
 
-s8                          rtcm3_register_callback(msg_state_t* s, u16 msg_type, rtcm3_msg_callback_t cb, rtcm3_msg_callbacks_node_t *node);
-void                        rtcm3_clear_callbacks(msg_state_t* s);
-rtcm3_msg_callbacks_node_t* rtcm3_find_callback(msg_state_t* s, u16 msg_type);
+s8                          rtcm3_register_callback(msg_state_t *s, u16 msg_type, rtcm3_msg_callback_t cb,
+    rtcm3_msg_callbacks_node_t *node);
+void                        rtcm3_clear_callbacks(msg_state_t *s);
+rtcm3_msg_callbacks_node_t *rtcm3_find_callback(msg_state_t *s, u16 msg_type);
 void                        msg_state_init(msg_state_t *s);
 
 s8                          rtcm3_process(msg_state_t *s, unsigned char buff);
-s8 							ubx_process (msg_state_t *s, unsigned char buff);
+s8              ubx_process(msg_state_t *s, unsigned char buff);
 unsigned int                RTCMgetbitu(unsigned char *, int, int);
-int                         RTCMgetbits(unsigned char *, int , int );
-static double               RTCMgetbits_38(unsigned char *, int );
+int                         RTCMgetbits(unsigned char *, int , int);
+static double               RTCMgetbits_38(unsigned char *, int);
 
 
 /* Global variables used for RTCM processing */
@@ -154,19 +155,22 @@ int rawIndex        = 0;
  *         already registered for that message type.
  */
 s8 rtcm3_register_callback(msg_state_t *s, u16 msg_type, rtcm3_msg_callback_t cb,
-                         rtcm3_msg_callbacks_node_t *node)
+                           rtcm3_msg_callbacks_node_t *node)
 {
   /* Check our callback function pointer isn't NULL. */
-  if (cb == 0)
+  if (cb == 0) {
     return RTCM_NULL_ERROR;
+  }
 
   /* Check our callback node pointer isn't NULL. */
-  if (node == 0)
+  if (node == 0) {
     return RTCM_NULL_ERROR;
+  }
 
   /* Check if callback was already registered for this type. */
-  if (rtcm3_find_callback(s, msg_type) != 0)
+  if (rtcm3_find_callback(s, msg_type) != 0) {
     return RTCM_CALLBACK_ERROR;
+  }
 
   /* Fill in our new rtcm3_msg_callback_node_t. */
   node->msg_type = msg_type;
@@ -189,8 +193,9 @@ s8 rtcm3_register_callback(msg_state_t *s, u16 msg_type, rtcm3_msg_callback_t cb
    * add our new node to the end.
    */
   rtcm3_msg_callbacks_node_t *p = s->rtcm3_msg_callbacks_head;
-  while (p->next)
+  while (p->next) {
     p = p->next;
+  }
 
   p->next = node;
 
@@ -214,11 +219,12 @@ void rtcm3_clear_callbacks(msg_state_t *s)
  * \return Pointer to callback node (#rtcm3_msg_callbacks_node_t) or `NULL` if
  *         callback not found for that message type.
  */
-rtcm3_msg_callbacks_node_t* rtcm3_find_callback(msg_state_t *s, u16 msg_type)
+rtcm3_msg_callbacks_node_t *rtcm3_find_callback(msg_state_t *s, u16 msg_type)
 {
   /* If our list is empty, return NULL. */
-  if (!s->rtcm3_msg_callbacks_head)
+  if (!s->rtcm3_msg_callbacks_head) {
     return 0;
+  }
 
   /* Traverse the linked list and return the callback
    * function pointer if we find a node with a matching
@@ -226,8 +232,9 @@ rtcm3_msg_callbacks_node_t* rtcm3_find_callback(msg_state_t *s, u16 msg_type)
    */
   rtcm3_msg_callbacks_node_t *p = s->rtcm3_msg_callbacks_head;
   do
-    if (p->msg_type == msg_type)
+    if (p->msg_type == msg_type) {
       return p;
+    }
 
   while ((p = p->next));
 
@@ -298,206 +305,203 @@ void msg_state_init(msg_state_t *s)
  */
 s8 rtcm3_process(msg_state_t *s, unsigned char buff)
 {
-/*	FAKE MESSAGE
-	buff[s->n_read] = s->n_read;
-	s->n_read++;
-	int fakeMsgLen = 200;
-	if(s->n_read == fakeMsgLen)
-	{
-		s->n_read = 0;
-		rtcm3_msg_callbacks_node_t* node = rtcm3_find_callback(s, RTCM3_MSG_1077);
-		(*node->cb)(s->sender_id, fakeMsgLen, buff, node->context);
-		return RTCM_OK_CALLBACK_EXECUTED;
-	}else{
-		return RTCM_OK;
-	}
- */
-	if(s->n_read == (1024 + 6) && s->state != UNINIT)
-	{
-		// We have exceeded the maximum message length (10bit) + 3 opening and 3 closing bytes. And we are not at UNINIT, this is not a proper message, reset!
-		s->state = UNINIT;
-		s->msg_class = NO_CLASS;
-	}
-	// Suppose we get more bytes than requested, lets still process them all
+  /*  FAKE MESSAGE
+    buff[s->n_read] = s->n_read;
+    s->n_read++;
+    int fakeMsgLen = 200;
+    if(s->n_read == fakeMsgLen)
+    {
+      s->n_read = 0;
+      rtcm3_msg_callbacks_node_t* node = rtcm3_find_callback(s, RTCM3_MSG_1077);
+      (*node->cb)(s->sender_id, fakeMsgLen, buff, node->context);
+      return RTCM_OK_CALLBACK_EXECUTED;
+    }else{
+      return RTCM_OK;
+    }
+   */
+  if (s->n_read == (1024 + 6) && s->state != UNINIT) {
+    // We have exceeded the maximum message length (10bit) + 3 opening and 3 closing bytes. And we are not at UNINIT, this is not a proper message, reset!
+    s->state = UNINIT;
+    s->msg_class = NO_CLASS;
+  }
+  // Suppose we get more bytes than requested, lets still process them all
 #ifdef DEBUG_PRINT_PACKAGE
-	printf("0x%x ", buff);
+  printf("0x%x ", buff);
 #endif
-	if(s->state != UNINIT && s->msg_class == RTCM_CLASS) s->msg_buff[s->n_read] = buff;
-	switch (s->state){
-	case UNINIT:
-		s->n_read = 0;
-		if (((int) buff) == RTCM3_PREAMBLE){
-			s->msg_class = RTCM_CLASS;
-			s->state = READ_RESERVED;
-			rawIndex        = 0;
-			checksumCounter = 0;
-			byteIndex       = 0;
-			s->msg_buff[s->n_read] = buff;
-		}
-		break;
-	case READ_RESERVED:
-		rd_msg_len1 = ((int) buff) & 0b00000011;
-		s->state    = READ_LENGTH;
-		break;
-	case READ_LENGTH:
-		rd_msg_len  = (rd_msg_len1 << 8) + ((int) buff) ;
-		s->state    = READ_MESSAGE;
-		break;
-	case READ_MESSAGE:
-		if (byteIndex == (rd_msg_len - 1)) s->state = READ_CHECKSUM;
-		byteIndex++;
-		break;
-	case READ_CHECKSUM:
-		checksumCounter++;
-		if(checksumCounter == 3)
-		{
+  if (s->state != UNINIT && s->msg_class == RTCM_CLASS) { s->msg_buff[s->n_read] = buff; }
+  switch (s->state) {
+    case UNINIT:
+      s->n_read = 0;
+      if (((int) buff) == RTCM3_PREAMBLE) {
+        s->msg_class = RTCM_CLASS;
+        s->state = READ_RESERVED;
+        rawIndex        = 0;
+        checksumCounter = 0;
+        byteIndex       = 0;
+        s->msg_buff[s->n_read] = buff;
+      }
+      break;
+    case READ_RESERVED:
+      rd_msg_len1 = ((int) buff) & 0b00000011;
+      s->state    = READ_LENGTH;
+      break;
+    case READ_LENGTH:
+      rd_msg_len  = (rd_msg_len1 << 8) + ((int) buff) ;
+      s->state    = READ_MESSAGE;
+      break;
+    case READ_MESSAGE:
+      if (byteIndex == (rd_msg_len - 1)) { s->state = READ_CHECKSUM; }
+      byteIndex++;
+      break;
+    case READ_CHECKSUM:
+      checksumCounter++;
+      if (checksumCounter == 3) {
 #ifdef DEBUG_PRINT_PACKAGE
-			printf("\n\n");
+        printf("\n\n");
 #endif
-			s->state = UNINIT;
-			// Check what message type it is
-			switch(RTCMgetbitu(s->msg_buff, 24 + 0, 12))
-			{
-			case 1005: s->msg_type = RTCM3_MSG_1005; break;
-			case 1077: s->msg_type = RTCM3_MSG_1077; break;
-			case 1087: s->msg_type = RTCM3_MSG_1087; break;
-			default  : printf("Unknown message type\n"); return RTCM_OK_CALLBACK_UNDEFINED;
-			}
-			s->n_read++;
-			s->msg_len   = s->n_read;
-			s->msg_class = NO_CLASS;
+        s->state = UNINIT;
+        // Check what message type it is
+        switch (RTCMgetbitu(s->msg_buff, 24 + 0, 12)) {
+          case 1005: s->msg_type = RTCM3_MSG_1005; break;
+          case 1077: s->msg_type = RTCM3_MSG_1077; break;
+          case 1087: s->msg_type = RTCM3_MSG_1087; break;
+          default  : printf("Unknown message type\n"); return RTCM_OK_CALLBACK_UNDEFINED;
+        }
+        s->n_read++;
+        s->msg_len   = s->n_read;
+        s->msg_class = NO_CLASS;
 #ifdef NO_CALLBACK
-			return RTCM_OK_CALLBACK_EXECUTED;
+        return RTCM_OK_CALLBACK_EXECUTED;
 #else
-			/* Message complete, process its callback. */
-			rtcm3_msg_callbacks_node_t* node = rtcm3_find_callback(s, s->msg_type);
-			if (node) {
-				(*node->cb)( s->msg_len, s->msg_buff);
-				return RTCM_OK_CALLBACK_EXECUTED;
-			} else {
-				return RTCM_OK_CALLBACK_UNDEFINED;
-			}
+        /* Message complete, process its callback. */
+        rtcm3_msg_callbacks_node_t *node = rtcm3_find_callback(s, s->msg_type);
+        if (node) {
+          (*node->cb)(s->msg_len, s->msg_buff);
+          return RTCM_OK_CALLBACK_EXECUTED;
+        } else {
+          return RTCM_OK_CALLBACK_UNDEFINED;
+        }
 #endif
-		}
-		break;
-	}
-	s->n_read++;
-	return RTCM_OK;
+      }
+      break;
+  }
+  s->n_read++;
+  return RTCM_OK;
 }
 
 
 // UBX message decoding
 
-s8 ubx_process (msg_state_t *s, unsigned char buff)
+s8 ubx_process(msg_state_t *s, unsigned char buff)
 {
-	if (s->state < GOT_PAYLOAD && s->msg_class == UBX_CLASS) {
-		s->ck_a += buff;
-		s->ck_b += s->ck_a;
-	}
-	switch (s->state) {
-	case UNINIT:
-		if (buff == UBX_PREAMBLE1) {
-			s->state++;
-			s->msg_class = UBX_CLASS;
-		}else{
-			s->n_read = 0;
-		}
-		break;
-	case GOT_SYNC1:
-		if (buff != UBX_PREAMBLE2 && s->msg_class == UBX_CLASS) {
-			s->error_last = GPS_UBX_ERR_OUT_OF_SYNC;
-			goto error;
-		}
-		s->ck_a = 0;
-		s->ck_b = 0;
-		s->state ++;
-		break;
-	case GOT_SYNC2:
-		//s->msg_class = buff;
-		s->state++;
-		break;
-	case GOT_CLASS:
-		s->msg_type = buff;
-		s->state++;
-		break;
-	case GOT_ID:
-		s->msg_len = buff;
-		s->state++;
-		break;
-	case GOT_LEN1:
-		s->msg_len |= (buff << 8);
-		if (s->msg_len > GPS_UBX_MAX_PAYLOAD) {
-			s->error_last = GPS_UBX_ERR_MSG_TOO_LONG;
-			goto error;
-		}
-		s->n_read = 0;
-		s->state++;
-		break;
-	case GOT_LEN2:
-		s->msg_buff[s->n_read] = buff;
-		s->n_read++;
-		if (s->n_read >= s->msg_len) {
-			s->state++;
-		}
-		break;
-	case GOT_PAYLOAD:
-		if (buff != s->ck_a) {
-			s->error_last = GPS_UBX_ERR_CHECKSUM;
-			goto error;
-		}
-		s->state++;
-		break;
-	case GOT_CHECKSUM1:
-		if (buff != s->ck_b) {
-			s->error_last = GPS_UBX_ERR_CHECKSUM;
-			goto error;
-		}
-		s->msg_class = NO_CLASS;
-		s->n_read = 0;
-		s->state = UNINIT;
+  if (s->state < GOT_PAYLOAD && s->msg_class == UBX_CLASS) {
+    s->ck_a += buff;
+    s->ck_b += s->ck_a;
+  }
+  switch (s->state) {
+    case UNINIT:
+      if (buff == UBX_PREAMBLE1) {
+        s->state++;
+        s->msg_class = UBX_CLASS;
+      } else {
+        s->n_read = 0;
+      }
+      break;
+    case GOT_SYNC1:
+      if (buff != UBX_PREAMBLE2 && s->msg_class == UBX_CLASS) {
+        s->error_last = GPS_UBX_ERR_OUT_OF_SYNC;
+        goto error;
+      }
+      s->ck_a = 0;
+      s->ck_b = 0;
+      s->state ++;
+      break;
+    case GOT_SYNC2:
+      //s->msg_class = buff;
+      s->state++;
+      break;
+    case GOT_CLASS:
+      s->msg_type = buff;
+      s->state++;
+      break;
+    case GOT_ID:
+      s->msg_len = buff;
+      s->state++;
+      break;
+    case GOT_LEN1:
+      s->msg_len |= (buff << 8);
+      if (s->msg_len > GPS_UBX_MAX_PAYLOAD) {
+        s->error_last = GPS_UBX_ERR_MSG_TOO_LONG;
+        goto error;
+      }
+      s->n_read = 0;
+      s->state++;
+      break;
+    case GOT_LEN2:
+      s->msg_buff[s->n_read] = buff;
+      s->n_read++;
+      if (s->n_read >= s->msg_len) {
+        s->state++;
+      }
+      break;
+    case GOT_PAYLOAD:
+      if (buff != s->ck_a) {
+        s->error_last = GPS_UBX_ERR_CHECKSUM;
+        goto error;
+      }
+      s->state++;
+      break;
+    case GOT_CHECKSUM1:
+      if (buff != s->ck_b) {
+        s->error_last = GPS_UBX_ERR_CHECKSUM;
+        goto error;
+      }
+      s->msg_class = NO_CLASS;
+      s->n_read = 0;
+      s->state = UNINIT;
 #ifdef NO_CALLBACK
-					return RTCM_OK_CALLBACK_EXECUTED;
+      return RTCM_OK_CALLBACK_EXECUTED;
 #else
-					/* Message complete, process its callback. */
-					rtcm3_msg_callbacks_node_t* node = rtcm3_find_callback(s, s->msg_type);
-					if (node) {
-						(*node->cb)( s->msg_len, s->msg_buff);
-						return RTCM_OK_CALLBACK_EXECUTED;
-					} else {
-						return RTCM_OK_CALLBACK_UNDEFINED;
-					}
+      /* Message complete, process its callback. */
+      rtcm3_msg_callbacks_node_t *node = rtcm3_find_callback(s, s->msg_type);
+      if (node) {
+        (*node->cb)(s->msg_len, s->msg_buff);
+        return RTCM_OK_CALLBACK_EXECUTED;
+      } else {
+        return RTCM_OK_CALLBACK_UNDEFINED;
+      }
 #endif
-		break;
-	default:
-		s->error_last = GPS_UBX_ERR_UNEXPECTED;
-		goto error;
-	}
-	return RTCM_OK;
-	error:
-	s->error_cnt++;
-	s->state = UNINIT;
-	s->msg_class = NO_CLASS;
-	return s->error_last;
+      break;
+    default:
+      s->error_last = GPS_UBX_ERR_UNEXPECTED;
+      goto error;
+  }
+  return RTCM_OK;
+error:
+  s->error_cnt++;
+  s->state = UNINIT;
+  s->msg_class = NO_CLASS;
+  return s->error_last;
 }
 
 unsigned int RTCMgetbitu(unsigned char *buff, int pos, int lenb)
 {
-	unsigned int bits=0;
-	int i;
-	for (i=pos;i<pos+lenb;i++) bits=(bits<<1)+((buff[i/8]>>(7-i%8))&1u);
-	return bits;
+  unsigned int bits = 0;
+  int i;
+  for (i = pos; i < pos + lenb; i++) { bits = (bits << 1) + ((buff[i / 8] >> (7 - i % 8)) & 1u); }
+  return bits;
 }
 
 int RTCMgetbits(unsigned char *buff, int pos, int lenb)
 {
-	unsigned int bits=RTCMgetbitu(buff,pos,lenb);
-	if (lenb<=0||32<=lenb||!(bits&(1u<<(lenb-1)))) return (int)bits;
-	return (int)(bits|(~0u<<lenb)); /* extend sign */
+  unsigned int bits = RTCMgetbitu(buff, pos, lenb);
+  if (lenb <= 0 || 32 <= lenb || !(bits & (1u << (lenb - 1)))) { return (int)bits; }
+  return (int)(bits | (~0u << lenb)); /* extend sign */
 }
 
 static double RTCMgetbits_38(unsigned char *buff, int pos)
 {
-	return (double)RTCMgetbits(buff,pos,32)*64.0+RTCMgetbitu(buff,pos+32,6);
+  return (double)RTCMgetbits(buff, pos, 32) * 64.0 + RTCMgetbitu(buff, pos + 32, 6);
 }
 
 #endif /* LIBRTCM3_RTCM3_H */
